@@ -18,6 +18,7 @@ import ActionTracker from "./pages/ActionTracker";
 import Help from "./pages/Help";
 import Dashboard from "./pages/Dashboard";
 import Reports from "./pages/Reports";
+import AuditLog from './pages/AuditLog';
 import { AuthProvider } from "./context/AuthContext";
 
 // Import Firebase (no need to use it directly here, just initializing)
@@ -48,7 +49,7 @@ const App = () => (
               <Route
                 path="projects"
                 element={
-                  <ProtectedRoute allowedRoles={["Admin", "Supervisor", "Operator"]}>
+                  <ProtectedRoute>
                     <Projects />
                   </ProtectedRoute>
                 }
@@ -64,7 +65,7 @@ const App = () => (
               <Route
                 path="projects/:projectId"
                 element={
-                  <ProtectedRoute allowedRoles={["Admin", "Supervisor", "Operator"]}>
+                  <ProtectedRoute>
                     <ProjectDetail />
                   </ProtectedRoute>
                 }
@@ -82,7 +83,7 @@ const App = () => (
               <Route
                 path="activities"
                 element={
-                  <ProtectedRoute allowedRoles={["Admin", "Supervisor", "Operator"]}>
+                  <ProtectedRoute>
                     <Activities />
                   </ProtectedRoute>
                 }
@@ -92,7 +93,7 @@ const App = () => (
               <Route
                 path="action-tracker"
                 element={
-                  <ProtectedRoute allowedRoles={["Admin", "Supervisor", "Operator"]}>
+                  <ProtectedRoute>
                     <ActionTracker />
                   </ProtectedRoute>
                 }
@@ -160,6 +161,16 @@ const App = () => (
               
               {/* Help route */}
               <Route path="help" element={<Help />} />
+              
+              {/* Audit Log route */}
+              <Route
+                path="/audit-log"
+                element={
+                  <ProtectedRoute allowedRoles={["Admin", "Supervisor"]}>
+                    <AuditLog />
+                  </ProtectedRoute>
+                }
+              />
               
               {/* Catch-all route */}
               <Route path="*" element={<NotFound />} />

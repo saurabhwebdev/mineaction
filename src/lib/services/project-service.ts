@@ -14,6 +14,7 @@ import {
   Timestamp
 } from "firebase/firestore";
 import { Project, ProjectFormData, ProjectUser, ProjectRole } from "@/lib/types/project";
+import { auditService } from './audit-service';
 
 // Collection reference
 const projectsRef = collection(db, "projects");
@@ -115,7 +116,8 @@ export const getProjectById = async (projectId: string): Promise<Project | null>
 export const createProject = async (
   projectData: ProjectFormData, 
   currentUserId: string,
-  projectUsers: ProjectUser[] = []
+  projectUsers: ProjectUser[] = [],
+  userName: string
 ): Promise<Project> => {
   try {
     // Ensure creator is in the users array as Project Manager
@@ -133,12 +135,22 @@ export const createProject = async (
     const projectWithMeta = {
       ...projectData,
       createdBy: currentUserId,
-      createdAt: serverTimestamp(),
+      createdAt: Timestamp.now(),
       users: finalUsers,
     };
     
     const docRef = await addDoc(projectsRef, projectWithMeta);
     
+    await auditService.createLog(
+      'project',
+      'create',
+      docRef.id,
+      currentUserId,
+      userName,
+      undefined,
+      `Created project: ${projectData.name}`
+    );
+
     return {
       id: docRef.id,
       ...projectData,
@@ -155,15 +167,35 @@ export const createProject = async (
 // Update an existing project
 export const updateProject = async (
   projectId: string, 
-  projectData: Partial<ProjectFormData>
+  projectData: Partial<ProjectFormData>,
+  userId: string,
+  userName: string
 ): Promise<void> => {
   try {
     const projectRef = doc(db, "projects", projectId);
+    const oldDoc = await getDoc(projectRef);
+    const oldData = oldDoc.data() as Project;
     
     await updateDoc(projectRef, {
       ...projectData,
       updatedAt: serverTimestamp()
     });
+
+    const changes = Object.entries(projectData).map(([field, newValue]) => ({
+      field,
+      oldValue: oldData[field as keyof Project],
+      newValue
+    }));
+
+    await auditService.createLog(
+      'project',
+      'update',
+      projectId,
+      userId,
+      userName,
+      changes,
+      `Updated project: ${oldData.name}`
+    );
   } catch (error) {
     console.error("Error updating project:", error);
     throw error;
@@ -171,10 +203,27 @@ export const updateProject = async (
 };
 
 // Delete a project
-export const deleteProject = async (projectId: string): Promise<void> => {
+export const deleteProject = async (
+  projectId: string,
+  userId: string,
+  userName: string
+): Promise<void> => {
   try {
     const projectRef = doc(db, "projects", projectId);
+    const oldDoc = await getDoc(projectRef);
+    const oldData = oldDoc.data() as Project;
+
     await deleteDoc(projectRef);
+
+    await auditService.createLog(
+      'project',
+      'delete',
+      projectId,
+      userId,
+      userName,
+      undefined,
+      `Deleted project: ${oldData.name}`
+    );
   } catch (error) {
     console.error("Error deleting project:", error);
     throw error;

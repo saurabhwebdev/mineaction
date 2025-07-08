@@ -1,5 +1,6 @@
 import { User } from "firebase/auth";
 import { UserRole } from "@/context/AuthContext";
+import { Timestamp } from 'firebase/firestore';
 
 export type ProjectType = 
   | "Demining" 
@@ -17,34 +18,28 @@ export interface ProjectUser {
   role: ProjectRole;
 }
 
-export type ProjectRole = 
-  | "Project Manager"
-  | "Field Supervisor"
-  | "Technical Advisor"
-  | "Team Member"
-  | "Observer";
+export type ProjectRole = 'Admin' | 'Supervisor' | 'Operator';
 
 export interface Project {
   id: string;
   name: string;
-  description?: string;
-  type: ProjectType;
+  description: string;
   location: string;
-  startDate: Date | string;
-  endDate?: Date | string;
-  status: "Planning" | "Active" | "On Hold" | "Completed" | "Cancelled";
-  createdBy: string;
-  createdAt: Date | string;
-  updatedAt?: Date | string;
+  startDate: Date;
+  endDate: Date;
+  status: 'Planning' | 'Active' | 'Completed' | 'On Hold' | 'Cancelled';
   users: ProjectUser[];
+  createdBy: string;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
 }
 
 export interface ProjectFormData {
   name: string;
-  description?: string;
-  type: ProjectType;
+  description: string;
   location: string;
-  startDate: Date | string;
-  endDate?: Date | string;
-  status: "Planning" | "Active" | "On Hold" | "Completed" | "Cancelled";
+  startDate: Date;
+  endDate: Date;
+  status: 'Planning' | 'Active' | 'Completed' | 'On Hold' | 'Cancelled';
+  users: ProjectUser[];
 } 

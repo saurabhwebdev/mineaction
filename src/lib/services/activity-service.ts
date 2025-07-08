@@ -14,6 +14,7 @@ import {
   Timestamp
 } from "firebase/firestore";
 import { Activity, ActivityFormData } from "@/lib/types/activity";
+import { auditService } from './audit-service';
 
 // Collection reference
 const activitiesRef = collection(db, "activities");
@@ -72,17 +73,34 @@ export const getActivityById = async (activityId: string): Promise<Activity | nu
 export const createActivity = async (
   projectId: string,
   activityData: ActivityFormData, 
-  currentUserId: string
+  currentUserId: string,
+  userName: string
 ): Promise<Activity> => {
   try {
+    const now = Timestamp.now();
     const activityWithMeta = {
       ...activityData,
       projectId,
       createdBy: currentUserId,
-      createdAt: serverTimestamp(),
+      createdAt: now,
+      updatedAt: now
     };
     
-    const docRef = await addDoc(activitiesRef, activityWithMeta);
+    const docRef = await addDoc(activitiesRef, {
+      ...activityWithMeta,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    });
+    
+    await auditService.createLog(
+      'activity',
+      'create',
+      docRef.id,
+      currentUserId,
+      userName,
+      undefined,
+      `Created activity: ${activityData.name}`
+    );
     
     return {
       id: docRef.id,
@@ -100,15 +118,37 @@ export const createActivity = async (
 // Update an existing activity
 export const updateActivity = async (
   activityId: string, 
-  activityData: Partial<ActivityFormData>
+  activityData: Partial<ActivityFormData>,
+  userId: string,
+  userName: string
 ): Promise<void> => {
   try {
     const activityRef = doc(db, "activities", activityId);
+    const oldDoc = await getDoc(activityRef);
+    const oldData = oldDoc.data() as Activity;
     
-    await updateDoc(activityRef, {
+    const updateData = {
       ...activityData,
       updatedAt: serverTimestamp()
-    });
+    };
+    
+    await updateDoc(activityRef, updateData);
+    
+    const changes = Object.entries(activityData).map(([field, newValue]) => ({
+      field,
+      oldValue: oldData[field as keyof Activity],
+      newValue
+    }));
+    
+    await auditService.createLog(
+      'activity',
+      'update',
+      activityId,
+      userId,
+      userName,
+      changes,
+      `Updated activity: ${oldData.name}`
+    );
   } catch (error) {
     console.error("Error updating activity:", error);
     throw error;
@@ -116,10 +156,27 @@ export const updateActivity = async (
 };
 
 // Delete an activity
-export const deleteActivity = async (activityId: string): Promise<void> => {
+export const deleteActivity = async (
+  activityId: string,
+  userId: string,
+  userName: string
+): Promise<void> => {
   try {
     const activityRef = doc(db, "activities", activityId);
+    const oldDoc = await getDoc(activityRef);
+    const oldData = oldDoc.data() as Activity;
+    
     await deleteDoc(activityRef);
+    
+    await auditService.createLog(
+      'activity',
+      'delete',
+      activityId,
+      userId,
+      userName,
+      undefined,
+      `Deleted activity: ${oldData.name}`
+    );
   } catch (error) {
     console.error("Error deleting activity:", error);
     throw error;

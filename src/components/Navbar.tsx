@@ -13,6 +13,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { UserRole } from "@/context/AuthContext";
 import RoleBasedContent from "./RoleBasedContent";
+import DailySummaryModal from './DailySummaryModal';
+import { useState } from 'react';
 
 const navLinks = [
   { name: "Home", path: "/" }
@@ -49,6 +51,7 @@ const roleBasedLinks: Record<UserRole, Array<{ name: string; path: string }>> = 
 export default function Navbar() {
   const location = useLocation();
   const { currentUser, userData, signIn, logout } = useAuth();
+  const [showDailySummary, setShowDailySummary] = useState(false);
   
   const handleLogin = async () => {
     try {
@@ -66,6 +69,10 @@ export default function Navbar() {
     }
   };
   
+  const isActive = (path: string) => {
+    return location.pathname === path;
+  };
+
   return (
     <header className="py-4 border-b">
       <div className="container mx-auto px-4 flex justify-between items-center">
@@ -200,8 +207,25 @@ export default function Navbar() {
               Sign in with Google
             </Button>
           )}
+
+          {currentUser && (
+            <Button
+              variant="outline"
+              className="mr-4"
+              onClick={() => setShowDailySummary(true)}
+            >
+              Daily Summary
+            </Button>
+          )}
         </div>
       </div>
+
+      {currentUser && (
+        <DailySummaryModal
+          open={showDailySummary}
+          onOpenChange={setShowDailySummary}
+        />
+      )}
     </header>
   );
 } 

@@ -1,34 +1,28 @@
-export type ActivityType = 
-  | "Drilling"
-  | "Blasting"
-  | "Hauling" 
-  | "Excavation"
-  | "Demolition"
-  | "Clearance"
-  | "Survey"
-  | "Training"
-  | "Other";
-
-export type ShiftType = "Morning" | "Afternoon" | "Night";
+import { Timestamp } from 'firebase/firestore';
 
 export interface Activity {
   id: string;
   projectId: string;
-  projectName?: string;
-  date: Date | string;
-  type: ActivityType;
-  shift: ShiftType;
-  crew: string;
-  remarks?: string;
+  name: string;
+  description: string;
+  type: string;
+  status: 'Planned' | 'In Progress' | 'Completed' | 'Cancelled';
+  startDate: Date;
+  endDate: Date;
+  location: string;
+  team: string[];
   createdBy: string;
-  createdAt: Date | string;
-  updatedAt?: Date | string;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
 }
 
 export interface ActivityFormData {
-  date: Date | string;
-  type: ActivityType;
-  shift: ShiftType;
-  crew: string;
-  remarks?: string;
+  name: string;
+  description: string;
+  type: string;
+  status: 'Planned' | 'In Progress' | 'Completed' | 'Cancelled';
+  startDate: Date;
+  endDate: Date;
+  location: string;
+  team: string[];
 } 
