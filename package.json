@@ -1,7 +1,8 @@
 {
-  "name": "vite_react_shadcn_ts",
+  "name": "mineaction",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
+  "description": "Comprehensive Mine Action Operations Management Platform",
   "type": "module",
   "scripts": {
     "dev": "vite",
